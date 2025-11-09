@@ -1,0 +1,49 @@
+random_seed: 42
+np_seed: 42
+
+categories:
+  - Rent
+  - Groceries
+  - Dining
+  - Transport
+  - Utilities
+  - Shopping
+  - Entertainment
+  - Health
+  - Other
+
+merchants:
+  Rent: ["Acme Property", "City Realty"]
+  Groceries: ["ParknShop", "Wellcome", "Market One"]
+  Dining: ["FoodExpress", "Cafe Central", "Sushi Go", "DeliverIt"]
+  Transport: ["MTR", "CityBus", "TaxiCo"]
+  Utilities: ["PowerCo", "WaterWorks", "NetFast"]
+  Shopping: ["UniMall", "FashionHub", "GadgetBox"]
+  Entertainment: ["CinemaMax", "SoundWave", "GameZone"]
+  Health: ["MediCare", "PharmaSure"]
+  Other: ["Misc Store", "Corner Shop"]
+
+users:
+  count: 5
+  currencies: ["HKD", "USD", "SGD"]
+  income_range: [10000, 38000]
+
+transactions:
+  months: 12
+  rent_range: [4000, 16000]
+  subscriptions:
+    count_range: [1, 2]
+    amount_range: [60, 160]
+    merchants: ["NetFast", "StreamPlus", "CloudMusic"]
+  variable_spend:
+    per_month_range: [20, 40]
+    category_amounts:
+      Groceries: [60, 500]
+      Dining: [50, 400]
+      Transport: [20, 200]
+      Utilities: [80, 600]
+      Shopping: [80, 1200]
+      Entertainment: [60, 500]
+      Health: [40, 400]
+      Other: [20, 300]
+      Rent: [2000, 16000]
