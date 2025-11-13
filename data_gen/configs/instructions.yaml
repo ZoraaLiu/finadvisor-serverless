@@ -1,0 +1,18 @@
+random_seed: 42
+
+outputs:
+  train: training/instructions.jsonl
+  eval: training/eval_prompts.jsonl
+
+split:
+  train_frac: 0.75
+
+users_limit: null
+
+as_of:
+  count: 12
+  step_days: 7
+
+periods: ["week", "month", "year"]
+
+custom_days: [45, 90, 180]
