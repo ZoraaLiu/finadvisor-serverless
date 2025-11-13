@@ -24,12 +24,12 @@ merchants:
   Other: ["Misc Store", "Corner Shop"]
 
 users:
-  count: 5
+  count: 100
   currencies: ["HKD", "USD", "SGD"]
-  income_range: [10000, 38000]
+  income_range: [2000, 38000]
 
 transactions:
-  months: 12
+  months: 24
   rent_range: [4000, 16000]
   subscriptions:
     count_range: [1, 2]

@@ -10,9 +10,9 @@ split:
 users_limit: null
 
 as_of:
-  count: 6 
-  step_days: 15
+  count: 12
+  step_days: 7
 
 periods: ["week", "month", "year"]
 
-custom_days: [45, 90]
+custom_days: [45, 90, 180]

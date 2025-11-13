@@ -54,9 +54,6 @@ def load_config(path: Path) -> dict:
 
     return cfg
 
-
-# ------------------- helpers -------------------
-
 def _first_day_n_months_ago(n: int) -> datetime:
     """First day of the month going back n-1 months so we cover exactly n months."""
     now = datetime.now(timezone.utc)

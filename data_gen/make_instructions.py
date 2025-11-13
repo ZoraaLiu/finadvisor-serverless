@@ -68,42 +68,83 @@ def _valid_summary(s: dict) -> bool:
     return True
 
 def _persona_from_summary(s: dict) -> str:
+    """Derive a more nuanced persona from a summary dict."""
     days = int(s.get("window_days", 30) or 30)
     spend = float(s.get("spend", 0.0))
     income = float(s.get("income", 0.0))
+    net = income - spend
+
     top = {k.lower(): v for k, v in (s.get("top_spend") or [])}
     dining = top.get("dining", 0.0)
     transport = top.get("transport", 0.0)
     rent = top.get("rent", 0.0)
+    shopping = top.get("shopping", 0.0)
+
     recurring = float(s.get("recurring_total", 0.0))
     subs = int(s.get("subs_estimate", 0))
     delivery = int(s.get("delivery_count", 0))
 
-    def monthly(x): 
+    def monthly(x: float) -> float:
         return x * (30.0 / max(1, days))
 
-    spend_m = monthly(spend) if spend > 0 else 0
-    dining_share = (dining / spend) if spend > 0 else 0
-    transport_share = (transport / spend) if spend > 0 else 0
-    rent_share = (rent / spend) if spend > 0 else 0
-    recurring_share = (recurring / max(1e-6, income)) if income > 0 else 0
+    spend_m = monthly(spend) if spend > 0 else 0.0
 
-    if rent_share > 0.35 or rent > 12000:
-        base = "rent-heavy professional"
-    elif dining_share > 0.25 or delivery >= 4:
-        base = "foodie with frequent deliveries"
-    elif subs >= 3 or recurring_share > 0.10:
-        base = "subscription-maximizer"
-    elif transport_share > 0.20:
-        base = "daily commuter"
-    elif spend_m < 6000 and income > 0:
-        base = "frugal saver"
+    # shares (guard against division by zero)
+    spend_denom = max(spend, 1e-6)
+    dining_share = dining / spend_denom
+    transport_share = transport / spend_denom
+    rent_share = rent / spend_denom
+    shopping_share = shopping / spend_denom
+
+    income_denom = max(income, 1e-6)
+    recurring_share = recurring / income_denom if income > 0 else 0.0
+
+    # savings_rate: how much of income is left after spend
+    savings_rate = net / income_denom if income > 0 else 0.0
+
+    # ---- Rule set ----
+
+    # 1) Edge cases around income / savings
+    if income <= 0 and spend > 0:
+        return "unsteady-income spender"
+
+    if income > 0 and savings_rate >= 0.4:
+        return "aggressive saver"
+
+    # 2) Rent-focused personas (stretched vs comfortable)
+    if rent_share > 0.45 and rent > 14000:
+        if savings_rate < 0.10:   # barely saving or negative
+            return "stretched renter"
+        else:
+            return "comfortable renter"
+
+    # 3) Food / delivery heavy
+    if dining_share > 0.25 or delivery >= 6:
+        return "delivery-focused foodie"
+
+    # 4) Shopping heavy
+    if shopping_share > 0.20:
+        return "shopper with flexible spend"
+
+    # 5) Subscriptions
+    if subs >= 3 or recurring_share > 0.15:
+        return "subscription-maximizer"
+
+    # 6) Transport
+    if transport_share > 0.20:
+        return "daily commuter"
+
+    # 7) Frugal / low-spend profile
+    if spend_m < 6000 and savings_rate >= 0.20 and income > 0:
+        return "frugal saver"
+
+    # 8) Fallback personas based on savings_rate
+    if savings_rate < 0.0:
+        return "overspending urban worker"
+    elif savings_rate < 0.15:
+        return "budget-conscious city dweller"
     else:
-        base = random.choice([
-            "urban worker", "busy professional", "city dweller",
-            "budget-conscious user", "everyday spender"
-        ])
-    return base
+        return "steady professional"
 
 TASK_TEMPLATES = [
     "Task: Give 2-3 concrete budgeting tips with rough {cur} savings per month.",
