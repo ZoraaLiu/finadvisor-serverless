@@ -24,7 +24,7 @@ merchants:
   Other: ["Misc Store", "Corner Shop"]
 
 users:
-  count: 1000
+  count: 100
   currencies: ["HKD", "USD", "SGD"]
   income_range: [2000, 38000]
 

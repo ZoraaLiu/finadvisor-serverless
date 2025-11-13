@@ -8,7 +8,7 @@ model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
 tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-small")
 
 # Load dataset
-dataset = load_dataset("json", data_files="data/instructions.jsonl", split="train")
+dataset = load_dataset("json", data_files="../data_gen/training/instructions.jsonl", split="train")
 
 def preprocess(example):
     model_inputs = tokenizer(
