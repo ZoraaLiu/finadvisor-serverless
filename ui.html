@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Financial Advice LLM</title>
+</head>
+<body>
+  <h2>Ask about budgeting & saving</h2>
+  <textarea id="query" rows="4" cols="50"></textarea><br>
+  <button onclick="sendQuery()">Submit</button>
+  <p><strong>Response:</strong></p>
+  <div id="response"></div>
+
+  <script>
+    async function sendQuery() {
+      const query = document.getElementById("query").value;
+      const res = await fetch("https://i0j1j2nka4.execute-api.us-east-1.amazonaws.com/prod/query", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+      });
+      const data = await res.json();
+      document.getElementById("response").innerText = data.response;
+    }
+  </script>
+</body>
+</html>

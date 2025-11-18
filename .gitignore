@@ -2,3 +2,9 @@ data/
 training/
 .pyc
 __pycache__/
+layer_torch.zip
+layer_transformers.zip
+layer.zip
+layer_torch/
+layer_transformers/
+lambda_package/
