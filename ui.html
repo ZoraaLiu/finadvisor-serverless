@@ -13,13 +13,13 @@
   <script>
     async function sendQuery() {
       const query = document.getElementById("query").value;
-      const res = await fetch("https://i0j1j2nka4.execute-api.us-east-1.amazonaws.com/prod/query", {
+      const res = await fetch("https://1lv2h7f7mi.execute-api.us-east-1.amazonaws.com/prod/predict", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({query})
       });
       const data = await res.json();
-      document.getElementById("response").innerText = data.response;
+      document.getElementById("response").innerText = data.response ?? data.error ?? "Unexpected error";
     }
   </script>
 </body>
