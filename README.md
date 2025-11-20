@@ -11,3 +11,14 @@ poetry install
 
 ## Data Gen
 Use `poetry run python pipeline.py --all` to run the full pipeline and generate dataset
+
+
+## Real Trial
+Run command:
+```
+python -m http.server 8080
+```
+and try with:
+```
+http://localhost:8080/ui.html
+```
