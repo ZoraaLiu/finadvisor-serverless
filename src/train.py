@@ -67,6 +67,6 @@ training_args = TrainingArguments(
 trainer = Trainer(model=model, args=training_args, train_dataset=tokenized)
 trainer.train()
 
-# 👇 Explicitly save model + tokenizer so evaluation works
+# Explicitly save model + tokenizer so evaluation works
 trainer.save_model("aws/package/model")
 tokenizer.save_pretrained("aws/package/model")
