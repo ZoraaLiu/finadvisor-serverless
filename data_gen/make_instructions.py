@@ -7,6 +7,9 @@ from typing import Iterable, List, Dict
 import pandas as pd
 import yaml
 
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
 from summaries import summarize_window, summarize_period
 from baseline import baseline_tips
 
@@ -53,6 +56,7 @@ def load_config(path: Path) -> dict:
 
 SYSTEM = "You are a budgeting assistant. Be practical, safe, and concise."
 
+
 def _fmt(cur: str, x: float) -> str:
     x = 0.0 if abs(x) < 1e-9 else x
     s = f"{x:,.0f}"
@@ -89,7 +93,6 @@ def _persona_from_summary(s: dict) -> str:
 
     spend_m = monthly(spend) if spend > 0 else 0.0
 
-    # shares (guard against division by zero)
     spend_denom = max(spend, 1e-6)
     dining_share = dining / spend_denom
     transport_share = transport / spend_denom
@@ -99,10 +102,7 @@ def _persona_from_summary(s: dict) -> str:
     income_denom = max(income, 1e-6)
     recurring_share = recurring / income_denom if income > 0 else 0.0
 
-    # savings_rate: how much of income is left after spend
     savings_rate = net / income_denom if income > 0 else 0.0
-
-    # ---- Rule set ----
 
     # 1) Edge cases around income / savings
     if income <= 0 and spend > 0:
@@ -252,23 +252,58 @@ def _generate_rows(
 def build_from_yaml(config_path: str, csv_path: str) -> tuple[str, str]:
     """
     Build instructions/eval from YAML + transactions CSV.
-    Returns (train_path, eval_path).
+
+    Hybrid approach:
+      - Use Spark for CSV ingestion + basic normalization (schema, null filtering).
+      - Convert to pandas once.
+      - Use pandas-based summaries for per-user, per-window stats.
     """
     cfg = load_config(Path(config_path))
 
     # seed for reproducibility
     random.seed(int(cfg["random_seed"]))
 
-    # load + normalize transactions
-    df = pd.read_csv(csv_path)
-    if "ts" not in df.columns or "user_id" not in df.columns:
+    # Spark ingestion + light normalization
+    spark = SparkSession.builder.appName("finadvisor-data-gen").getOrCreate()
+    spark.sparkContext.setLogLevel("WARN")
+
+    sdf = (
+        spark.read
+        .option("header", True)
+        .csv(csv_path)
+    )
+
+    # Cast and clean with Spark
+    if "ts" not in sdf.columns or "user_id" not in sdf.columns:
+        spark.stop()
         raise ValueError("CSV must include 'ts' and 'user_id' columns")
+
+    sdf = (
+        sdf
+        .withColumn("ts", F.to_timestamp("ts"))
+        .withColumn("amount", F.col("amount").cast("double"))
+    )
+
+    if "is_recurring" in sdf.columns:
+        sdf = sdf.withColumn("is_recurring", F.col("is_recurring").cast("boolean"))
+    else:
+        sdf = sdf.withColumn("is_recurring", F.lit(False))
+
+    sdf = sdf.filter(F.col("ts").isNotNull() & F.col("amount").isNotNull())
+
+    df = sdf.toPandas()
+    spark.stop()
+
     df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
     df = df.dropna(subset=["ts"])
-    if "amount" in df.columns:
-        df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
 
-    users = sorted(df["user_id"].unique())
+    if "is_recurring" in df.columns:
+        df["is_recurring"] = df["is_recurring"].astype(bool)
+    else:
+        df["is_recurring"] = False
+
+    users = sorted(df["user_id"].astype(str).unique())
     if cfg["users_limit"]:
         users = users[: int(cfg["users_limit"])]
     if not users:
