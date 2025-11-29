@@ -2,6 +2,8 @@
 
 A lightweight, serverless financial advisory system powered by a fine-tuned small language model (LLM) deployed on AWS Lambda. The system analyzes simulated personal financial transaction data to provide personalized budgeting and saving suggestions. This project demonstrates how machine learning models can run efficiently on serverless infrastructure with minimal latency and resource overhead.
 
+* This project has been developed entirely by our group without adapting or reusing any open-source projects; all code is original and represents our own contribution.
+
 ## Project Overview
 
 **Core Components:**
